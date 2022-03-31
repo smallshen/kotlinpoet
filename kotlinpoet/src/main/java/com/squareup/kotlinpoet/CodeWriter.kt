@@ -141,6 +141,16 @@ internal class CodeWriter constructor(
     emit(" */\n")
   }
 
+  fun emitContextReceivers(receivers: List<TypeName>) {
+    if (receivers.isEmpty()) return
+    emit("context(")
+    receivers.forEach { r ->
+      emitCode("%T", r)
+    }
+    emit(")")
+    emit("\n")
+  }
+
   fun emitAnnotations(annotations: List<AnnotationSpec>, inline: Boolean) {
     for (annotationSpec in annotations) {
       annotationSpec.emit(this, inline)
@@ -459,9 +469,9 @@ internal class CodeWriter constructor(
     // Mark the member as importable for a future pass unless the name clashes with
     // a method in the current context
     if (!kdoc && (
-      memberName.isExtension ||
-        !isMethodNameUsedInCurrentContext(memberName.simpleName)
-      )
+        memberName.isExtension ||
+          !isMethodNameUsedInCurrentContext(memberName.simpleName)
+        )
     ) {
       importableMember(memberName)
     }

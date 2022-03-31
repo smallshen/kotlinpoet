@@ -15,11 +15,7 @@
  */
 package com.squareup.kotlinpoet
 
-import com.squareup.kotlinpoet.KModifier.ABSTRACT
-import com.squareup.kotlinpoet.KModifier.EXPECT
-import com.squareup.kotlinpoet.KModifier.EXTERNAL
-import com.squareup.kotlinpoet.KModifier.INLINE
-import com.squareup.kotlinpoet.KModifier.VARARG
+import com.squareup.kotlinpoet.KModifier.*
 import java.lang.reflect.Type
 import javax.lang.model.element.Element
 import javax.lang.model.element.ExecutableElement
@@ -41,6 +37,7 @@ public class FunSpec private constructor(
   public val kdoc: CodeBlock = builder.kdoc.build()
   public val returnKdoc: CodeBlock = builder.returnKdoc
   public val receiverKdoc: CodeBlock = builder.receiverKdoc
+  public val contextReceivers: List<TypeName> = builder.contextReceivers.toImmutableList()
   public val annotations: List<AnnotationSpec> = builder.annotations.toImmutableList()
   public val modifiers: Set<KModifier> = builder.modifiers.toImmutableSet()
   public val typeVariables: List<TypeVariableName> = builder.typeVariables.toImmutableList()
@@ -82,6 +79,9 @@ public class FunSpec private constructor(
       codeWriter.emitKdoc(kdocWithTags())
     } else {
       codeWriter.emitKdoc(kdoc.ensureEndsWithNewLine())
+    }
+    if (contextReceivers.isNotEmpty()) {
+      codeWriter.emitContextReceivers(receivers = contextReceivers)
     }
     codeWriter.emitAnnotations(annotations, false)
     codeWriter.emitModifiers(modifiers, implicitModifiers)
@@ -290,6 +290,7 @@ public class FunSpec private constructor(
     internal var delegateConstructorArguments = listOf<CodeBlock>()
     internal val body = CodeBlock.builder()
 
+    public val contextReceivers: MutableList<TypeName> = mutableListOf()
     public val annotations: MutableList<AnnotationSpec> = mutableListOf()
     public val modifiers: MutableList<KModifier> = mutableListOf()
     public val typeVariables: MutableList<TypeVariableName> = mutableListOf()
@@ -307,6 +308,22 @@ public class FunSpec private constructor(
 
     public fun addAnnotations(annotationSpecs: Iterable<AnnotationSpec>): Builder = apply {
       this.annotations += annotationSpecs
+    }
+
+    public fun addContextReceiver(klass: KClass<*>): Builder = apply {
+      contextReceivers += klass.asClassName()
+    }
+
+    public fun addContextReceiver(clazz: Class<*>): Builder = apply {
+      contextReceivers += clazz.asClassName()
+    }
+
+    public fun addContextReceiver(receiver: TypeName): Builder = apply {
+      contextReceivers += receiver
+    }
+
+    public fun addContextReceivers(vararg receivers: TypeName): Builder = apply {
+      contextReceivers += receivers
     }
 
     public fun addAnnotation(annotationSpec: AnnotationSpec): Builder = apply {
